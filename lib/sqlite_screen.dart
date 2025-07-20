@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/contact.dart';
@@ -10,34 +9,49 @@ class SQLiteScreen extends StatefulWidget {
 
 class _SQLiteScreenState extends State<SQLiteScreen> {
   late Database db;
+  List<Contact> contacts = [];
 
   @override
   void initState() {
     super.initState();
     openDatabase('my_db.db').then((database) {
       db = database;
-      db.execute('CREATE TABLE IF NOT EXISTS contacts(id INTEGER PRIMARY KEY, name TEXT, phone TEXT)');
+      db.execute(
+        'CREATE TABLE IF NOT EXISTS contacts(id INTEGER PRIMARY KEY, name TEXT, phone TEXT)',
+      );
+      fetchData();
     });
   }
 
   void insertData(Contact contact) async {
-    await db.insert('contacts', contact.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
-    setState(() {});
+    await db.insert(
+      'contacts',
+      contact.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    fetchData();
   }
 
   void fetchData() async {
     var result = await db.query('contacts');
-    print(result);
+    setState(() {
+      contacts = result.map((data) => Contact.fromMap(data)).toList();
+    });
   }
 
   void updateData(Contact contact) async {
-    await db.update('contacts', contact.toMap(), where: 'id = ?', whereArgs: [contact.id]);
-    setState(() {});
+    await db.update(
+      'contacts',
+      contact.toMap(),
+      where: 'id = ?',
+      whereArgs: [contact.id],
+    );
+    fetchData();
   }
 
   void deleteData(int id) async {
     await db.delete('contacts', where: 'id = ?', whereArgs: [id]);
-    setState(() {});
+    fetchData();
   }
 
   @override
@@ -46,10 +60,42 @@ class _SQLiteScreenState extends State<SQLiteScreen> {
       appBar: AppBar(title: Text("SQLite CRUD Operations")),
       body: Column(
         children: [
-          ElevatedButton(onPressed: () => insertData(Contact(name: 'John Doe', phone: '1234567890')), child: Text("Insert Data")),
-          ElevatedButton(onPressed: fetchData, child: Text("Fetch Data")),
-          ElevatedButton(onPressed: () => updateData(Contact(id: 1, name: 'Jane Doe', phone: '9876543210')), child: Text("Update Data")),
-          ElevatedButton(onPressed: () => deleteData(1), child: Text("Delete Data")),
+          ElevatedButton(
+            onPressed: () =>
+                insertData(Contact(name: 'John Doe', phone: '1234567890')),
+            child: Icon(Icons.add),
+          ),
+          ElevatedButton(onPressed: fetchData, child: Icon(Icons.refresh)),
+          Expanded(
+            child: ListView.builder(
+              itemCount: contacts.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(contacts[index].name),
+                  subtitle: Text(contacts[index].phone),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () => updateData(
+                          Contact(
+                            id: contacts[index].id,
+                            name: 'Updated Name1',
+                            phone: 'Updated Phone2',
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => deleteData(contacts[index].id ?? 0),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

@@ -1,8 +1,8 @@
 
+import 'package:crud_operations/shared_preferences_screen.dart';
+import 'package:crud_operations/sqlite_screen.dart';
 import 'package:flutter/material.dart';
-import 'screens/sqlite_screen.dart';
-import 'screens/shared_preferences_screen.dart';
-import 'screens/api_screen.dart';
+import 'api_screen.dart';
 
 void main() {
   runApp(MyApp());
