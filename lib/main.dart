@@ -1,8 +1,9 @@
-
 import 'package:crud_operations/shared_preferences_screen.dart';
 import 'package:crud_operations/sqlite_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'api_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,6 +30,11 @@ class MyApp extends StatelessWidget {
 }
 
 class HomeScreen extends StatelessWidget {
+  void getToken() async {
+    String? token = await FirebaseMessaging.instance.getToken();
+    print("🔐 FCM Token: $token");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,11 +44,17 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/sqlite'),
+              onPressed: () async {
+                await Firebase.initializeApp();
+
+                getToken(); // First call
+                Navigator.pushNamed(context, '/sqlite'); // Then navigate
+              },
               child: Text("SQLite CRUD Operations"),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/sharedpreferences'),
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/sharedpreferences'),
               child: Text("SharedPreferences Example"),
             ),
             ElevatedButton(
